@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group 'net.in.dayan'
+version '0.3'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile("com.fasterxml.jackson.core:jackson-databind:2.9.+")
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'file:/tmp/myrepo')
+//            repository(url: 'http://host/repositories/json') {
+//                authentication(userName: "admin", password: "admin123")
+//            }
+        }
+    }
+}
+
+[install.repositories.mavenInstaller, uploadArchives.repositories.mavenDeployer]*.pom*.whenConfigured { pom ->
+    pom.project {
+        inceptionYear '2019'
+        packaging 'jar'
+        licenses {
+            license {
+                name 'The MIT License'
+                url 'https://opensource.org/licenses/mit-license.php'
+                distribution 'repo'
+            }
+        }
+    }
+}
