@@ -5,7 +5,7 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group 'net.in.dayan'
+group 'com.github.dayan888'
 version '0.3'
 
 sourceCompatibility = 1.8

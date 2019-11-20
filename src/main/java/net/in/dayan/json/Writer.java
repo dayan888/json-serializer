@@ -22,6 +22,7 @@ public class Writer {
     private JsonGenerator gen;
     private SerializerProvider serializers;
     private Stack nameStack = new Stack();
+    private static List<String> IGNORE_LIST = Arrays.asList(new String[]{"serialVersionUID"});
 
     protected Writer(Wrapper wrapper, JsonGenerator gen, SerializerProvider serializers) {
         this.wrapper = wrapper;
@@ -98,7 +99,7 @@ public class Writer {
      */
     private void write(String name, Object val, boolean ignoreNull) throws IOException, InvocationTargetException, IllegalAccessException {
 
-        if (val == null && ignoreNull) {
+        if (val == null && ignoreNull || IGNORE_LIST.contains(name)) {
             return;
         }
 
@@ -153,21 +154,27 @@ public class Writer {
         gen.writeStartObject();
 
         boolean ignoreNull = isIgnoreNull(obj);
-        Method[] methods = obj.getClass().getDeclaredMethods();
+        List<Method> methodList = getPublicGetMethods(obj);
 
         for (Field field : obj.getClass().getDeclaredFields()) {
             String name = field.getName();
-            Method method = getPublicGetMethod(methods, field);
+            Method method = getPublicGetMethod(methodList, name);
             if (method != null) {
                 Object ret = method.invoke(obj, (Object[])null);
                 write(name, ret, ignoreNull);
+                methodList.remove(method);
             }
-            else {
-                if (!isJsonIgnore(field)) {
-                    field.setAccessible(true);
-                    write(name, field.get(obj), ignoreNull);
-                }
+            else if (!isJsonIgnore(field)) {
+                field.setAccessible(true);
+                write(name, field.get(obj), ignoreNull);
             }
+        }
+
+        for (Method method : methodList) {
+            String name = method.getName();
+            String fieldName = name.substring(3, 4).toLowerCase() + (name.length() > 3? name.substring(4): "");
+            Object ret = method.invoke(obj, (Object[])null);
+            write(fieldName, ret, ignoreNull);
         }
 
         gen.writeEndObject();
@@ -199,24 +206,32 @@ public class Writer {
         return an != null && an.value().equals(JsonInclude.Include.NON_NULL);
     }
 
-    /**
-     * return public instance method whose name is get***
-     *
-     * @param methods
-     * @param field
-     * @return
-     */
-    private Method getPublicGetMethod(Method[] methods, Field field) {
-        String name = field.getName();
-        String getName = "get" + name.substring(0, 1).toUpperCase() + (name.length() > 1? name.substring(1): "");
-        for (Method method : methods) {
-            int modifiers = method.getModifiers();
-            if (method.getName().equals(getName) && !Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers)
-                    && !Modifier.isAbstract(modifiers)) {
+    private Method getPublicGetMethod(List<Method> methodList, String name) {
+        for (Method method : methodList) {
+            String getName = "get" + name.substring(0, 1).toUpperCase() + (name.length() > 1? name.substring(1): "");
+            if (method.getName().equals(getName)) {
                 return method;
             }
         }
         return null;
     }
+
+    /**
+     * return public instance method whose name is get***
+     *
+     * @param obj
+     * @return
+     */
+    private List<Method> getPublicGetMethods(Object obj) {
+        List<Method> list = new ArrayList<Method>();
+        for (Method method : obj.getClass().getDeclaredMethods()) {
+            int modifiers = method.getModifiers();
+            if (!Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers) && !Modifier.isAbstract(modifiers) && method.getName().startsWith("get")) {
+                list.add(method);
+            }
+        }
+        return list;
+    }
+
 
 }
