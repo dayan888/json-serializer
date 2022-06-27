@@ -156,7 +156,7 @@ public class Writer {
         boolean ignoreNull = isIgnoreNull(obj);
         List<Method> methodList = getPublicGetMethods(obj);
 
-        for (Field field : obj.getClass().getDeclaredFields()) {
+        for (Field field : getDeclaredFields(obj)) {
             String name = field.getName();
             Method method = getPublicGetMethod(methodList, name);
             if (method != null) {
@@ -178,6 +178,16 @@ public class Writer {
         }
 
         gen.writeEndObject();
+    }
+
+    private Field[] getDeclaredFields(Object obj) {
+        ArrayList list = new ArrayList<Field>();
+        Class cls = obj.getClass();
+        while (cls != null && cls != Object.class) {
+            list.addAll(Arrays.asList(cls.getDeclaredFields()));
+            cls = cls.getSuperclass();
+        }
+        return (Field[]) list.toArray(new Field[]{});
     }
 
     /**
@@ -224,14 +234,17 @@ public class Writer {
      */
     private List<Method> getPublicGetMethods(Object obj) {
         List<Method> list = new ArrayList<Method>();
-        for (Method method : obj.getClass().getDeclaredMethods()) {
-            int modifiers = method.getModifiers();
-            if (!Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers) && !Modifier.isAbstract(modifiers) && method.getName().startsWith("get")) {
-                list.add(method);
+        Class cls = obj.getClass();
+        while (cls != null && cls != Object.class) {
+            for (Method method : cls.getDeclaredMethods()) {
+                int modifiers = method.getModifiers();
+                if (!Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers) && !Modifier.isAbstract(modifiers) && method.getName().startsWith("get")) {
+                    list.add(method);
+                }
             }
+            cls = cls.getSuperclass();
         }
         return list;
     }
-
 
 }

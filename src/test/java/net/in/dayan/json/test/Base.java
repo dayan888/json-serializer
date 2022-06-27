@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Base {
+public class Base extends Parent {
     public int id;
     public String name;
     public Long lVal;

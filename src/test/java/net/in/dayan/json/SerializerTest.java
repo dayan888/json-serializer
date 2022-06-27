@@ -30,9 +30,9 @@ public class SerializerTest {
     @Test
     public void toJsonString() throws JsonProcessingException {
         try {
-            Assert.assertEquals(props.getProperty("T001"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"id", "url"}), null, false));
-            Assert.assertEquals(props.getProperty("T002"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"id", "url", "childArray", "childArray.id", "childSet", "childSet.name"}), null, false));
-            Assert.assertEquals(props.getProperty("T003"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"id", "url"}), Arrays.asList(new String[]{"date", "timestamp"}), true));
+            Assert.assertEquals(props.getProperty("T001"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"parentId", "id", "url"}), null, false));
+            Assert.assertEquals(props.getProperty("T002"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"parentId", "id", "url", "childArray", "childArray.id", "childSet", "childSet.name"}), null, false));
+            Assert.assertEquals(props.getProperty("T003"), Serializer.getInstance().toJsonString(base, Arrays.asList(new String[]{"parentId", "id", "url"}), Arrays.asList(new String[]{"date", "timestamp"}), true));
             Assert.assertEquals(props.getProperty("T004"), Serializer.getInstance().toJsonString(base, null, null, true));
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,14 +43,15 @@ public class SerializerTest {
     public void toJsonString2() throws JsonProcessingException {
         try {
             Wrapper wrapper = new Wrapper(base);
-            wrapper.addInclude(Arrays.asList(new String[]{"id", "url"}));
+            wrapper.addInclude(Arrays.asList(new String[]{"parentId", "id", "url"}));
             Assert.assertEquals(props.getProperty("T001"), Serializer.getInstance().toJsonString(wrapper));
 
             wrapper = new Wrapper(base);
-            wrapper.addInclude(Arrays.asList(new String[]{"id", "url", "childArray", "childArray.id", "childSet", "childSet.name"}));
+            wrapper.addInclude(Arrays.asList(new String[]{"parentId", "id", "url", "childArray", "childArray.id", "childSet", "childSet.name"}));
             Assert.assertEquals(props.getProperty("T002"), Serializer.getInstance().toJsonString(wrapper));
 
             wrapper = new Wrapper(base);
+            wrapper.addInclude("parentId");
             wrapper.addInclude("id");
             wrapper.addInclude("url");
             wrapper.addExclude(Arrays.asList(new String[]{"date", "timestamp"}));
@@ -74,6 +75,7 @@ public class SerializerTest {
 
     private Base createTargetObject() throws IOException {
         Base base = new Base();
+        base.parentId = 123;
         base.id = 10;
         base.name = "hoge";
         base.setUrl(new URL("https://xxx.com/hoge?a=123"));
