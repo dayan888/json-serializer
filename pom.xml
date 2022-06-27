@@ -6,7 +6,7 @@
 
     <groupId>com.github.dayan888</groupId>
     <artifactId>json-serializer</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <name>Json Serializer</name>
     <url>https://github.com/dayan888/json-serializer</url>
     <description>Dynamically specify fields of object to convert to json string.</description>
